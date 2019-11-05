@@ -1,0 +1,59 @@
+---
+title: "Regression"
+author: "Rick Brown"
+date: "11/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(moderndive)
+library(infer)
+
+```
+
+```{r ut_evals, warning=FALSE, message=FALSE}
+
+object <- evals %>%
+  lm(formula = score ~ age + gender)
+
+get_regression_table(object)
+
+
+
+evals %>%
+  rep_sample_n(size = nrow(evals), replace = TRUE, reps = 10) %>%
+  group_by(replicate) %>%
+  summarize(mean_age = mean(age)) %>%
+  summarize(lower = quantile(mean_age, probs = 0.025), 
+            upper = quantile(mean_age, probs = 0.975))
+
+
+# nest combines each replicate into vector list
+
+# map_dbl used to return double rather than nest. Alternatively, use map and then pipe into unnest(coeff_age)
+
+evals <- evals %>%
+  rep_sample_n(size = nrow(evals), replace = TRUE, reps = 10) %>%
+  group_by(replicate) %>%
+  nest() %>%
+  mutate(results = map(data, ~ lm(score ~ age + gender, data = .x))) %>%
+  mutate(coefficients = map(results, ~ coef(.x))) %>%
+  mutate(coeff_age = map_dbl(coefficients, ~ pluck(.x, "age"))) 
+
+evals
+
+evals %>%
+summarize(lower = quantile(coeff_age, probs = 0.025),
+        upper = quantile(coeff_age, probs = 0.975))
+
+  
+
+quantile(evals$mean_age, probs = c(0.025, 0.5, 0.975))
+
+```
+
+
+
