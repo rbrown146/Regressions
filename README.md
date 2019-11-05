@@ -1,1 +1,3 @@
-# class-2019-11-05
+# Regressions
+
+This class project involved generating regressions from data in the Moderdive package
